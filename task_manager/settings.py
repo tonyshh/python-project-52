@@ -19,7 +19,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'webserver',
     '.railway.app',
-    'https://task-manager-j4db.onrender.com',
+    'task-manager-j4db.onrender.com',
 ]
 
 INSTALLED_APPS = [
