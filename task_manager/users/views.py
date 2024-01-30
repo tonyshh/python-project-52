@@ -1,39 +1,76 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
+from task_manager.users.forms import LoginForm
 
 
-class IndexView(View):
+FOOTER = {'text': 'by zluuba', 'url': 'https://github.com/tonyshh'}
+
+
+def index(request):
+    title = 'Task manager'
+    content = {
+        'header': 'Hello there',
+        'greetings': 'This is the Task Manager,',
+        'body': 'I allow you to set tasks, assign performers and change their statuses. '
+                'Registration and authentication are required to work with my system.',
+    }
+    return render(request, 'index.html', context={
+        'title': title,
+        'content': content,
+        'footer': FOOTER,
+    })
+
+
+class LoginView(View):
 
     def get(self, request, *args, **kwargs):
-        # users = User.objects.all()[:15]
-        # return render(request, 'users/index.html', context={
-        #     'users': users,
-        # })
-        return render(request, 'users/index.html')
-
-
-class UserFormCreateView(View):
-
-    def get(self, request, *args, **kwargs):
-        return render(request, 'users/user_create.html')
+        title = 'Sign In'
+        form = LoginForm()
+        return render(request, 'login.html', context={
+            'title': title,
+            'footer': FOOTER,
+            'form': form,
+        })
 
     def post(self, request, *args, **kwargs):
-        return render(request, 'users/user_create.html')
+        title = 'Sign In'
+        form = LoginForm()
+        return render(request, 'login.html', context={
+            'title': title,
+            'footer': FOOTER,
+            'form': form,
+        })
 
 
-class UserFormUpdateView(View):
-
-    def get(self, request, *args, **kwargs):
-        return render(request, 'users/user_update.html')
-
-    def post(self, request, *args, **kwargs):
-        return render(request, 'users/user_update.html')
-
-
-class UserFormDeleteView(View):
+class LogoutView(View):
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'users/user_delete.html')
+        return render(request, 'index.html')
 
-    def post(self, request, *args, **kwargs):
-        return render(request, 'users/user_delete.html')
+
+def page_not_found(request, exception):
+    title = 'Page not found'
+    content = {
+        'sad_smile': '˙◠˙',
+        'message': 'Page not found',
+        'url_text': 'Go home'
+    }
+    return render(request, "page_not_found.html", context={
+        'title': title,
+        'footer': FOOTER,
+        'content': content,
+    })
+
+
+def internal_server_error(request):
+    title = 'Internal server error'
+    content = {
+        'sad_smile': '˙◠˙',
+        'message': 'Internal server error',
+        'url_text': 'Go home'
+    }
+    return render(request, "internal_server_error.html", context={
+        'title': title,
+        'footer': FOOTER,
+        'content': content,
+    })
