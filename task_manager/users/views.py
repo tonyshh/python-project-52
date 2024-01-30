@@ -1,76 +1,99 @@
+# from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.views import View
-from task_manager.users.forms import LoginForm
+from .forms import AddUserForm
+from .models import User
 
 
-FOOTER = {'text': 'by zluuba', 'url': 'https://github.com/tonyshh'}
+FOOTER = {'text': 'by tonyshh', 'url': 'https://github.com/tonyshh'}
 
 
-def index(request):
-    title = 'Task manager'
-    content = {
-        'header': 'Hello there',
-        'greetings': 'This is the Task Manager,',
-        'body': 'I allow you to set tasks, assign performers and change their statuses. '
-                'Registration and authentication are required to work with my system.',
-    }
-    return render(request, 'index.html', context={
-        'title': title,
-        'content': content,
-        'footer': FOOTER,
-    })
-
-
-class LoginView(View):
+class IndexView(View):
+    title = 'Users'
 
     def get(self, request, *args, **kwargs):
-        title = 'Sign In'
-        form = LoginForm()
-        return render(request, 'login.html', context={
-            'title': title,
+        users = User.objects.all()
+        content = {
+            'table_name': 'Users',
+            'id': 'ID',
+            'username': 'Username',
+            'full_name': 'Full name',
+            'created_at': 'Created at',
+            'edit': 'Edit',
+            'delete': 'Delete',
+        }
+        return render(request, 'users/users.html', context={
+            'users': users,
+            'title': self.title,
             'footer': FOOTER,
+            'content': content,
+        })
+
+
+class UserFormCreateView(View):
+
+    def get(self, request, *args, **kwargs):
+        form = AddUserForm()
+        return render(request, 'users/create.html', context={
             'form': form,
+            'title': 'Sign Up',
+            'footer': FOOTER,
         })
 
     def post(self, request, *args, **kwargs):
-        title = 'Sign In'
-        form = LoginForm()
-        return render(request, 'login.html', context={
-            'title': title,
-            'footer': FOOTER,
+        form = AddUserForm(request.POST)
+        if form.is_valid():
+            # print(form.cleaned_data)
+            try:
+                first_name = form.cleaned_data['first_name']
+                last_name = form.cleaned_data['last_name']
+                username = form.cleaned_data['username']
+                password = form.cleaned_data['password']
+                if password == form.cleaned_data['confirm_password']:
+                    User.objects.create(first_name=first_name, last_name=last_name,
+                                        username=username, password=password)
+                messages.success(request, 'All done!')
+                return redirect('home')
+            except Exception as e:
+                form.add_error(None, f'form: Cannot add user to db. Error: {e}')
+                messages.error(request, f'Cannot add user to db. Error: {e}')
+        else:
+            messages.error(request, 'Fail. Form is not valid')
+        return render(request, 'users/create.html', context={
             'form': form,
+            'title': 'Sign In',
+            'footer': FOOTER,
         })
 
 
-class LogoutView(View):
+class UserFormUpdateView(View):
+    title = 'Edit profile'
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'index.html')
+        return render(request, 'users/update.html', context={
+            'title': self.title,
+            'footer': FOOTER,
+        })
+
+    def post(self, request, *args, **kwargs):
+        return render(request, 'users/update.html', context={
+            'title': self.title,
+            'footer': FOOTER,
+        })
 
 
-def page_not_found(request, exception):
-    title = 'Page not found'
-    content = {
-        'sad_smile': '˙◠˙',
-        'message': 'Page not found',
-        'url_text': 'Go home'
-    }
-    return render(request, "page_not_found.html", context={
-        'title': title,
-        'footer': FOOTER,
-        'content': content,
-    })
+class UserFormDeleteView(View):
+    title = 'Delete account'
 
+    def get(self, request, *args, **kwargs):
+        return render(request, 'users/delete.html', context={
+            'title': self.title,
+            'footer': FOOTER,
+        })
 
-def internal_server_error(request):
-    title = 'Internal server error'
-    content = {
-        'sad_smile': '˙◠˙',
-        'message': 'Internal server error',
-        'url_text': 'Go home'
-    }
-    return render(request, "internal_server_error.html", context={
-        'title': title,
-        'footer': FOOTER,
-        'content': content,
-    })
+    def post(self, request, *args, **kwargs):
+        return render(request, 'users/delete.html', context={
+            'title': self.title,
+            'footer': FOOTER,
+        })
