@@ -8,7 +8,12 @@
 {% block body %}
 
     <div class="container wrapper flex-grow-1 mt-5 bg-dark text-light">
-        <h1 class="my-4">{{ title }}</h1>
+        <div class="d-flex my-3">
+            <h1 class="flex-grow-1">{{ title }}</h1>
+            <a class="btn btn-outline-primary align-self-center" href="{% url 'status_create' %}" role="button">
+                {{ create_btn }}
+            </a>
+        </div>
         <table class="table table-striped">
             <thead>
                 <tr class="bg-dark text-light">
@@ -18,20 +23,19 @@
                 </tr>
             </thead>
         <tbody>
-        {% for user in users %}
+        {% for status in statuses %}
         <tr class="bg-dark text-light">
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.get_fullname }}</td>
+            <td>{{ status.id }}</td>
+            <td>{{ status.name }}</td>
             <td>
-                {{ user.created_at|date:"d.m.Y " }}
+                {{ status.created_at|date:"d.m.Y " }}
                 <br>
-                {{ user.created_at|date:"H:i" }}
+                {{ status.created_at|date:"H:i" }}
             </td>
             <td>
-                <a href="{% url 'users_update' user.id %}">{{ edit_btn }}</a>
+                <a href="{% url 'status_update' status.id %}">{{ edit_btn }}</a>
                 <br>
-                <a href="{% url 'users_delete' user.id %}">{{ delete_btn }}</a>
+                <a href="{% url 'status_delete' status.id %}">{{ delete_btn }}</a>
             </td>
         </tr>
         {% endfor %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% load bootstrap4 %}
+{% load i18n %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block body %}
+
+    <div class="container wrapper flex-grow-1 mt-5 bg-dark text-light">
+        <div class="d-flex my-3">
+            <h1 class="flex-grow-1">{{ title }}</h1>
+            <a class="btn btn-outline-primary align-self-center mx-2" href="#" role="button">
+                {% trans 'Filter' %}
+            </a>
+            <a class="btn btn-outline-primary align-self-center" href="{% url 'task_create' %}" role="button">
+                {{ create_btn }}
+            </a>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr class="bg-dark text-light">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+        <tbody>
+        {% for task in tasks %}
+        <tr class="bg-dark text-light">
+            <td>{{ task.id }}</td>
+            <td><a href="{% url 'task' task.id %}">{{ task.name }}</a></td>
+            <td>{{ task.status }}</td>
+            <td>{{ task.author }}</td>
+            <td>{{ task.performer }}</td>
+            <td>
+                {{ task.created_at|date:"d.m.Y " }}
+                <br>
+                {{ task.created_at|date:"H:i" }}
+            </td>
+            <td>
+                <a href="{% url 'task_update' task.pk %}">{{ edit_btn }}</a>
+                <br>
+                <a href="{% url 'task_delete' task.pk %}">{{ delete_btn }}</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+{% endblock %}

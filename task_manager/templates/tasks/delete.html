@@ -13,7 +13,7 @@
                 {% if request.user.is_authenticated %}
                     <p class="display-4 mt-5 mb-4">{{ title }}</p>
                     <p class="lead mx-auto mb-1 w-50">
-                        {{ text }} {{ user.get_fullname }}?
+                        {{ text }} {{ task.name }}?
                     </p>
                     <form method="post">
                         {% csrf_token %}
