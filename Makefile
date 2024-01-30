@@ -3,7 +3,7 @@ dev:
 
 start:
 	python3 manage.py migrate
-	poetry run gunicorn --bind 0.0.0.0:$(PORT) task_manager.wsgi
+	poetry run gunicorn --bind 0.0.0.0:8000 task_manager.wsgi
 
 install:
 	poetry install
