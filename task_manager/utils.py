@@ -60,9 +60,7 @@ class TaskPermissions:
                     request, _('The task can be deleted only by its author')
                 )
                 return redirect('tasks')
+            return super().dispatch(request, *args, **kwargs)
 
         except (Task.DoesNotExist, User.DoesNotExist):
-            pass
-
-        finally:
             return super().dispatch(request, *args, **kwargs)
