@@ -1,6 +1,6 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.translation import gettext as _
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import logout
 from django.shortcuts import redirect
@@ -30,7 +30,7 @@ class UsersView(ListView):
 
 class UserLoginView(SuccessMessageMixin, LoginView):
     form_class = LoginForm
-    template_name = 'users/form.html'
+    template_name = 'form.html'
     success_message = _('You are logged in')
     extra_context = {
         'title': _('Sign in'),
@@ -48,9 +48,9 @@ class UserLogout(View):
         return redirect('home')
 
 
-class UserCreateView(CreateView):
+class UserCreateView(SuccessMessageMixin, CreateView):
     form_class = UserCreateForm
-    template_name = 'users/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('login')
     success_message = _('User is successfully registered')
     extra_context = {
@@ -59,10 +59,12 @@ class UserCreateView(CreateView):
     }
 
 
-class UserUpdateView(UserPermissions, AuthorizationCheck, UpdateView):
+class UserUpdateView(
+    UserPermissions, AuthorizationCheck, SuccessMessageMixin, UpdateView
+):
     model = User
     form_class = UserUpdateForm
-    template_name = 'users/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('users')
     success_message = _('User is successfully updated')
     extra_context = {
@@ -90,8 +92,7 @@ class UserDeleteView(
 
         if user_tasks:
             messages.error(
-                self.request, 'Cannot delete a user because he is being used'
+                self.request, _('Cannot delete a user because he is being used')
             )
-            # ru: "Невозможно удалить пользователя, потому что он используется"
             return redirect('users')
         return super().form_valid(form)

@@ -1,9 +1,9 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib import messages
 from django.utils.translation import gettext as _
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.contrib import messages
 
 from task_manager.utils import AuthorizationCheck
 from task_manager.tasks.models import Task
@@ -27,7 +27,7 @@ class LabelsView(AuthorizationCheck, ListView):
 
 class LabelCreateView(AuthorizationCheck, SuccessMessageMixin, CreateView):
     form_class = LabelForm
-    template_name = 'labels/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('labels')
     success_message = _('Label successfully created')
     extra_context = {
@@ -39,7 +39,7 @@ class LabelCreateView(AuthorizationCheck, SuccessMessageMixin, CreateView):
 class LabelUpdateView(AuthorizationCheck, SuccessMessageMixin, UpdateView):
     model = Label
     form_class = LabelForm
-    template_name = 'labels/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('labels')
     success_message = _('Label is successfully updated')
     extra_context = {
@@ -65,14 +65,13 @@ class LabelDeleteView(AuthorizationCheck, SuccessMessageMixin, DeleteView):
 
         self.object = self.get_object()
         form = self.get_form()
+
         if form.is_valid():
             if not tasks_with_label:
                 return self.form_valid(form)
             messages.error(
                 self.request,
-                'It is not possible to delete a label because it is in use'
+                _('It is not possible to delete a label because it is in use')
             )
-            # ru: "Невозможно удалить метку, потому что она используется"
             return redirect('labels')
-        else:
-            return self.form_invalid(form)
+        return self.form_invalid(form)

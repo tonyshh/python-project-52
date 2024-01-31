@@ -1,8 +1,10 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext as _
 from django.shortcuts import redirect
 from django.contrib import messages
 
 from task_manager.tasks.models import Task
+from task_manager.users.models import User
 
 
 class AuthorizationCheck(LoginRequiredMixin):
@@ -13,8 +15,9 @@ class AuthorizationCheck(LoginRequiredMixin):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            messages.error(request, 'You are not logged in! Please log in.')
-            # ru: "Вы не авторизованы! Пожалуйста, выполните вход."
+            messages.error(
+                request, _('You are not logged in! Please log in.')
+            )
             return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 
@@ -32,9 +35,8 @@ class UserPermissions:
 
         if current_user != chosen_user_id:
             messages.error(
-                request, 'You have no rights to change another user.'
+                request, _('You have no rights to change another user.')
             )
-            # ru: "У вас нет прав для изменения другого пользователя."
             return redirect('users')
 
         return super().dispatch(request, *args, **kwargs)
@@ -47,14 +49,20 @@ class TaskPermissions:
     """
 
     def dispatch(self, request, *args, **kwargs):
-        task_author = str(Task.objects.get(pk=kwargs['pk']).author)
-        curr_user = str(request.user)
-
-        if curr_user != task_author:
-            messages.error(
-                request, 'The task can be deleted only by its author'
+        try:
+            task_author = str(Task.objects.get(pk=kwargs['pk']).author)
+            curr_user = str(
+                User.objects.get(username=request.user).get_fullname()
             )
-            # ru: "Задачу может удалить только её автор"
-            return redirect('tasks')
 
-        return super().dispatch(request, *args, **kwargs)
+            if curr_user != task_author:
+                messages.error(
+                    request, _('The task can be deleted only by its author')
+                )
+                return redirect('tasks')
+
+        except (Task.DoesNotExist, User.DoesNotExist):
+            pass
+
+        finally:
+            return super().dispatch(request, *args, **kwargs)

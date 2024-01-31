@@ -1,15 +1,16 @@
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
-from django_filters.views import FilterView
-from task_manager.tasks.filters import TaskFilter
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.translation import gettext as _
 from django.urls import reverse_lazy
 
-from task_manager.users.models import User
-from task_manager.utils import AuthorizationCheck, TaskPermissions
+from django_filters.views import FilterView
 
-from .models import Task
+from task_manager.utils import AuthorizationCheck, TaskPermissions
+from task_manager.tasks.filters import TaskFilter
+from task_manager.users.models import User
+
 from .forms import TaskForm
+from .models import Task
 
 
 class TasksView(AuthorizationCheck, FilterView):
@@ -42,7 +43,7 @@ class TaskView(AuthorizationCheck, DetailView):
 
 class TaskCreateView(AuthorizationCheck, SuccessMessageMixin, CreateView):
     form_class = TaskForm
-    template_name = 'tasks/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('tasks')
     success_message = _('Task successfully created')
     extra_context = {
@@ -59,7 +60,7 @@ class TaskCreateView(AuthorizationCheck, SuccessMessageMixin, CreateView):
 class TaskUpdateView(AuthorizationCheck, SuccessMessageMixin, UpdateView):
     model = Task
     form_class = TaskForm
-    template_name = 'tasks/form.html'
+    template_name = 'form.html'
     success_url = reverse_lazy('tasks')
     success_message = _('Task is successfully updated')
     extra_context = {
