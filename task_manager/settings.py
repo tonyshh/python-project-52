@@ -1,10 +1,10 @@
 from pathlib import Path
 from dotenv import load_dotenv
-from django.utils.translation import gettext_lazy as _
+import dj_database_url
 import os
 
-load_dotenv()
 
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     'webserver',
     '.railway.app',
     'task-manager-j4db.onrender.com',
+    '0.0.0.0',
 ]
 
 INSTALLED_APPS = [
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'task_manager',
     'task_manager.users',
     'task_manager.statuses',
+    'task_manager.tasks',
 ]
 
 MIDDLEWARE = [
@@ -43,7 +45,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'task_manager.urls'
@@ -71,14 +73,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     },
-    'production': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': BASE_DIR / 'postgresql',
-        # "USER": "mydatabaseuser",
-        # "PASSWORD": "mypassword",
-        # "HOST": "127.0.0.1",
-        # "PORT": "5432",
-    }
+    'production': dj_database_url.config(
+        default='postgresql:///db.postgresql',
+        conn_max_age=600,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -87,25 +85,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'OPTIONS': {
+            'min_length': 3,
+        }
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
-# LANGUAGE_CODE = 'ru'
+# LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 LANGUAGES = (
-    ('en-us', _('English')),
-    ('ru', _('Russian')),
+    ('en-us', 'English'),
+    ('ru', 'Russian'),
 )
 
 LOCALE_PATHS = (
-    'task_manager/locale',
+    os.path.join(BASE_DIR, 'locale'),
 )
 
 TIME_ZONE = 'UTC'
