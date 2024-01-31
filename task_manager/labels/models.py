@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 
-class Status(models.Model):
+class Label(models.Model):
     name = models.CharField(
         max_length=255, verbose_name=_('Name'),
         unique=True

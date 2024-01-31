@@ -9,10 +9,12 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = True        # don't forget change debug to False
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+ROLLBAR_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
-# AUTH_USER_MODEL = 'users.User'
+DEBUG = os.getenv('DEBUG')
+DEBUG = True if DEBUG else False
 
 
 ALLOWED_HOSTS = [
@@ -35,6 +37,8 @@ INSTALLED_APPS = [
     'task_manager.users',
     'task_manager.statuses',
     'task_manager.tasks',
+    'task_manager.labels',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -46,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'django.middleware.locale.LocaleMiddleware',
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 ]
 
 ROOT_URLCONF = 'task_manager.urls'
@@ -68,16 +73,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'task_manager.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    'production': dj_database_url.config(
-        default='postgresql:///db.postgresql',
-        conn_max_age=600,
-    )
-}
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app'
+]
+
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=1800
+        ),
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -106,8 +119,16 @@ LOCALE_PATHS = (
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+ROLLBAR = {
+    'access_token': ROLLBAR_ACCESS_TOKEN,
+    'environment': 'development' if DEBUG else 'production',
+    'code_version': '1.0',
+    'root': BASE_DIR,
+}

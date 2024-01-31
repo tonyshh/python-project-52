@@ -1,4 +1,6 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
+from django_filters.views import FilterView
+from task_manager.tasks.filters import TaskFilter
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.translation import gettext as _
 from django.urls import reverse_lazy
@@ -10,17 +12,19 @@ from .models import Task
 from .forms import TaskForm
 
 
-class TasksView(AuthorizationCheck, ListView):
+class TasksView(AuthorizationCheck, FilterView):
     model = Task
+    filterset_class = TaskFilter
     context_object_name = 'tasks'
     template_name = 'tasks/tasks.html'
     extra_context = {
-        'title': _('Tasks'),                                        # ru: "Задачи"
-        'fields': ['ID', _('Name'), _('Status'), _('Author'),       # ru: "Имя", "Статус", "Автор"
-                   _('Performer'), _('Created at'), ''],            # ru: "Исполнитель", "Дата создания"
-        'create_btn': _('Create task'),                             # ru: "Создать"
-        'edit_btn': _('Edit'),                                      # ru: "Изменить"
-        'delete_btn': _('Delete'),                                  # ru: "Удалить"
+        'title': _('Tasks'),
+        'fields': ['ID', _('Name'), _('Status'), _('Author'),
+                   _('Executor'), _('Created at'), ''],
+        'create_btn': _('Create task'),
+        'edit_btn': _('Edit'),
+        'delete_btn': _('Delete'),
+        'filter_btn': _('Show'),
     }
 
 
@@ -28,9 +32,9 @@ class TaskView(AuthorizationCheck, DetailView):
     model = Task
     template_name = 'tasks/task.html'
     extra_context = {
-        'title': _('Task preview'),                                 # ru: "Просмотр задачи"
+        'title': _('Task preview'),
         'fields': ['ID', _('Name'), _('Status'), _('Author'),
-                   _('Performer'), _('Created at'), ''],
+                   _('Executor'), _('Created at'), ''],
         'edit_btn': _('Edit'),
         'delete_btn': _('Delete'),
     }
@@ -40,10 +44,10 @@ class TaskCreateView(AuthorizationCheck, SuccessMessageMixin, CreateView):
     form_class = TaskForm
     template_name = 'tasks/form.html'
     success_url = reverse_lazy('tasks')
-    success_message = _('Task successfully created')        # ru: "Задача успешно создана"
+    success_message = _('Task successfully created')
     extra_context = {
-        'title': _('Create task'),                          # ru: "Создать задачу"
-        'button': _('Create'),                              # ru: "Создать"
+        'title': _('Create task'),
+        'button': _('Create'),
     }
 
     def form_valid(self, form):
@@ -57,20 +61,22 @@ class TaskUpdateView(AuthorizationCheck, SuccessMessageMixin, UpdateView):
     form_class = TaskForm
     template_name = 'tasks/form.html'
     success_url = reverse_lazy('tasks')
-    success_message = _('Task is successfully updated')     # ru: "Задача успешно изменена"
+    success_message = _('Task is successfully updated')
     extra_context = {
-        'title': _('Update task'),                          # ru: "Изменение задачи"
-        'button': _('Update'),                              # ru: "Изменить"
+        'title': _('Update task'),
+        'button': _('Update'),
     }
 
 
-class TaskDeleteView(TaskPermissions, AuthorizationCheck, SuccessMessageMixin, DeleteView):
+class TaskDeleteView(
+    TaskPermissions, AuthorizationCheck, SuccessMessageMixin, DeleteView
+):
     model = Task
     template_name = 'tasks/delete.html'
     success_url = reverse_lazy('tasks')
-    success_message = _('Task successfully deleted')        # ru: "Задача успешно удалена"
+    success_message = _('Task successfully deleted')
     extra_context = {
-        'title': _('Delete task'),                          # ru: "Удаление задачи"
-        'text': _('Are you sure you want to delete '),      # ru: "Вы уверены, что хотите удалить "
-        'button': _('Yes, delete'),                         # ru: "Да, удалить"
+        'title': _('Delete task'),
+        'text': _('Are you sure you want to delete '),
+        'button': _('Yes, delete'),
     }

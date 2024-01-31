@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% load bootstrap4 %}
+{% load i18n %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block body %}
+
+    <div class="container wrapper flex-grow-1 mt-5 bg-dark text-light">
+        <div class="d-flex my-3">
+            <h1 class="flex-grow-1">{{ title }}</h1>
+            <a class="btn btn-outline-primary align-self-center" href="{% url 'label_create' %}" role="button">
+                {{ create_btn }}
+            </a>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr class="bg-dark text-light">
+                    {% for field in fields %}
+                        <th>{{ field }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+        <tbody>
+        {% for label in labels %}
+        <tr class="bg-dark text-light">
+            <td>{{ label.id }}</td>
+            <td>{{ label.name }}</td>
+            <td>
+                {{ label.created_at|date:"d.m.Y " }}
+                <br>
+                {{ label.created_at|date:"H:i" }}
+            </td>
+            <td>
+                <a href="{% url 'label_update' label.id %}">{{ edit_btn }}</a>
+                <br>
+                <a href="{% url 'label_delete' label.id %}">{{ delete_btn }}</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+{% endblock %}
