@@ -22,6 +22,8 @@ ALLOWED_HOSTS = [
     '.railway.app',
     '127.0.0.1',
     '0.0.0.0',
+    'task-manager-j4db.onrender.com',
+    
 ]
 
 INSTALLED_APPS = [
@@ -73,7 +75,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'task_manager.wsgi.application'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.railway.app'
+    'https://*.render.com/'
 ]
 
 # if DEBUG:
