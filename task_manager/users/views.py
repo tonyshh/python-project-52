@@ -1,61 +1,54 @@
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, UpdateView, DeleteView
-from django.utils.translation import gettext_lazy as _
-from django.contrib.messages.views import SuccessMessageMixin
-from .forms import UsersForm
-from .models import Users
-from django.contrib import messages
 from django.shortcuts import redirect
+from django.contrib import messages
+from .models import CustomUser
+from django.contrib.messages.views import SuccessMessageMixin
+from task_manager.users.forms import CustomUserCreationForm
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from task_manager.tasks.models import Task
+from django.db.models import Q
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from task_manager.mixin import NewLoginRequiredMixin, UserPermissionMixin
 
 
-class SignUp(SuccessMessageMixin, CreateView):
-    form_class = UsersForm
-    success_url = reverse_lazy("login")
-    template_name = "users/registration.html"
-    extra_context = {'title': _('Create user')}
-    success_message = _('User created successfully')
+class RegisterUser(SuccessMessageMixin, CreateView):
+    model = CustomUser
+    form_class = CustomUserCreationForm
+    template_name = 'users/register.html'
+    success_url = reverse_lazy('login')
+    success_message = _('User successfully registered')
 
 
-class ListUsers(ListView):
-    model = Users
+class UserListView(ListView):
+    model = CustomUser
+    template_name = 'users/list_users.html'
     context_object_name = 'users'
-    extra_context = {'title': _('Users')}
+    extra_context = {'btn_update': _('Update'),
+                     'btn_delete': _('Delete'),
+                     }
 
 
-# Правила для Update and Delete, установленные так, что изменять и удалять
-# данные пользователя, может только сам пользователь
-class RulesMixin:
-
-    # Убедимся, что текущий пользователь имеет разрешение.
-    def has_permission(self) -> bool:
-        return self.get_object().pk == self.request.user.pk
-
-    # Диспетчер отвечающий за статус аутентификации и вывод ответа
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            messages.error(
-                request,
-                messages.error(self.request, _('You are not authorized!'))
-            )
-            return redirect('login')
-
-        elif not self.has_permission():
-            messages.error(
-                request,
-                messages.error(self.request, _("You have't permission!"))
-            )
-            return redirect('home_users')
-        return super().dispatch(request, *args, **kwargs)
+class UpdateUserView(NewLoginRequiredMixin, UserPermissionMixin, SuccessMessageMixin, UpdateView):
+    model = CustomUser
+    form_class = CustomUserCreationForm
+    template_name = 'users/update.html'
+    success_url = reverse_lazy('users')
+    success_message = _('User successfully updated')
 
 
-class UpdateUser(RulesMixin, SuccessMessageMixin, UpdateView):
-    model = Users
-    form_class = UsersForm
-    success_url = reverse_lazy('home_users')
-    success_message = _('User successfully changed')
-
-
-class DeleteUser(RulesMixin, SuccessMessageMixin, DeleteView):
-    model = Users
-    success_url = reverse_lazy('home_users')
+class DeleteUserView(NewLoginRequiredMixin, UserPermissionMixin, SuccessMessageMixin, DeleteView):
+    model = CustomUser
+    template_name = 'users/delete.html'
+    success_url = reverse_lazy('users')
     success_message = _('User successfully deleted')
+
+    def post(self, request, *args, **kwargs):
+        self_id = self.kwargs['pk']
+        if Task.objects.filter(
+                Q(executor_id=self_id) | Q(author_id=self_id)):
+            messages.error(
+                self.request,
+                _('It`s not possible to delete a User that is being used')
+            )
+            return redirect(self.success_url)
+        return super().post(request, *args, **kwargs)

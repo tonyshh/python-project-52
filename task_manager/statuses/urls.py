@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import ListStatuses, CreateStatus, UpdateStatus, DeleteStatus
+from task_manager.statuses import views
+
 
 urlpatterns = [
-    path('', ListStatuses.as_view(), name='home_statuses'),
-    path('create/', CreateStatus.as_view(), name='create_status'),
-    path('<int:pk>/update/', UpdateStatus.as_view(), name='update_status'),
-    path('<int:pk>/delete/', DeleteStatus.as_view(), name='delete_status')
+    path('', views.index, name='statuses'),
+    path('create/', views.CreateStatusView.as_view(), name='create_status'),
+    path('<int:pk>/update/', views.UpdateStatusView.as_view(), name='update_status'),
+    path('<int:pk>/delete/', views.DeleteStatusView.as_view(), name='delete_status'),
 ]

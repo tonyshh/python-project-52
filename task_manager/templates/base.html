@@ -1,28 +1,71 @@
+<!doctype html>
+{% load bootstrap4 %}
+{% bootstrap_css %}
 {% load i18n %}
-<!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="">
   <head>
     <meta charset="utf-8">
-    <title>{{title}}</title>
-    {% load static %}
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="{% static 'headers.css' %}" rel="stylesheet">
-    {% load bootstrap4 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript jquery='full' %}
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>{% translate "Task Manager" %}</title>
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/navbar-static/">
+
+
+<link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="navbar-top.css" rel="stylesheet">
   </head>
-
-  <body class="d-flex flex-column min-vh-100">
-    {% include "navigation.html" %}
-    <div class="container">
-      {% if messages %}
-        {% bootstrap_messages %}
-      {% endif %}
-
-      {% block content %}
-      {% endblock %}
-    </div>
-    <p> </p>
-  </body>
+  <body  class="d-flex flex-column min-vh-100">
+      <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" href="/">{% translate "Task Manager" %}</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+              <ul class="navbar-nav mr-auto">
+                  <li class="nav-item active">
+                      <a class="nav-link" href="{% url 'users' %}">{% trans "Users" %}<span class="sr-only">(current)</span></a>
+                  </li>
+                  {% if request.user.is_authenticated %}
+                  <li class="nav-item">
+                      <a class="nav-link" href="{% url 'statuses' %}">{% trans 'Statuses' %}</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'labels' %}">{% trans 'Labels' %}</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'tasks' %}">{% trans 'Tasks' %}</a>
+                  </li>
+                {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link">{{ request.user.username }}</a></li>
+                    <li class="nav-item"><a href="{% url 'logout' %}" class="nav-link active" aria-current="page">{% trans "Logout" %}</a></li>
+                    {% else %}
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'login' %}">{% trans "Login" %}</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'create' %}">{% trans "Registration" %}</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+      
+        <div class="container wrapper flex-grow-1">
+          {% bootstrap_messages %}
+          {% block content %}
+          {% endblock %}
+        </div>
+              
+       <footer>
+        <div class="container my-5 pt-4 border-top">
+            <p target="_blank" class="text-primary" align="center">support@icloud.com</p>
+        </div>
+        </footer>
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+      <script>window.jQuery || document.write('<script src="../assets/js/vendor/jquery.slim.min.js"><\/script>')</script><script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>

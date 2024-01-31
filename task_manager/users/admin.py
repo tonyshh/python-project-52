@@ -1,12 +1,12 @@
 from django.contrib import admin
+from .models import CustomUser
+from django.contrib.auth.admin import UserAdmin
+from .forms import CustomUserCreationForm
 
-# Register your models here.
-from .models import Users
+
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    model = CustomUser
 
 
-@admin.register(Users)
-class UserAdmin(admin.ModelAdmin):
-    search_fields = ['username']
-    list_display = ('id', 'first_name', 'last_name', 'username', 'password')
-
-# admin.site.register(Users, UserAdmin)
+admin.site.register(CustomUser, CustomUserAdmin)
