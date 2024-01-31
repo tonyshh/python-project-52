@@ -1,56 +1,53 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib import messages
-from django.utils.translation import gettext as _
-from django.shortcuts import redirect
+from .models import Labels
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView
+from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import ProtectedError
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.utils.translation import gettext_lazy as _
+# Create your views here.
 
-from task_manager.utils import AuthorizationCheckMixin
-from task_manager.tasks.models import Task
 
-from .models import Label
-from .forms import LabelForm
+# Класс который содержит все общие атрибуты классов CRUD
+class LabelsMixin(LoginRequiredMixin, SuccessMessageMixin):
+    model = Labels
+    extra_context = {'title': _('Labels'), 'button': _('Create')}
+    login_url = reverse_lazy('login')
+    success_url = reverse_lazy('home_labels')
+    fields = ['name']
 
 
-class LabelsView(AuthorizationCheckMixin, ListView):
-    model = Label
+class ListLabels(LabelsMixin, ListView):
     context_object_name = 'labels'
-    template_name = 'labels/labels.html'
 
 
-class LabelCreateView(AuthorizationCheckMixin,
-                      SuccessMessageMixin, CreateView):
-    form_class = LabelForm
-    template_name = 'labels/create.html'
-    success_url = reverse_lazy('labels')
-    success_message = _('Label successfully created')
+class CreateLabel(LabelsMixin, CreateView):
+    success_message = _("Label created successfully")
+    template_name = 'apps/apps_form.html'
 
 
-class LabelUpdateView(AuthorizationCheckMixin,
-                      SuccessMessageMixin, UpdateView):
-    model = Label
-    form_class = LabelForm
-    template_name = 'labels/update.html'
-    success_url = reverse_lazy('labels')
-    success_message = _('Label successfully updated')
+class UpdateLabel(LabelsMixin, UpdateView):
+    success_message = _('Label successfully changed')
+    template_name = 'apps/apps_form.html'
+    extra_context = {'title': _('Labels'), 'button': _('Change')}
 
 
-class LabelDeleteView(AuthorizationCheckMixin,
-                      SuccessMessageMixin, DeleteView):
-    model = Label
-    template_name = 'labels/delete.html'
-    success_url = reverse_lazy('labels')
-    success_message = _('Label successfully deleted')
+class DeleteLabel(LabelsMixin, DeleteView):
+    template_name = 'apps/apps_confirm_delete.html'
 
     def post(self, request, *args, **kwargs):
-        label_id = kwargs['pk']
-        tasks_with_label = Task.objects.filter(labels=label_id)
-
-        if tasks_with_label:
+        try:
+            self.delete(request, *args, **kwargs)
+            messages.success(
+                self.request,
+                _('Label successfully deleted')
+            )
+            return redirect(reverse_lazy('home_labels'))
+        except ProtectedError:
             messages.error(
                 self.request,
-                _('It is not possible to delete a label '
-                  'because it is in use')
+                _("Error! Can't delete, label in use")
             )
-            return redirect('labels')
-        return super().post(request, *args, **kwargs)
+            return redirect(reverse_lazy('home_labels'))

@@ -1,12 +1,9 @@
-from django.contrib.auth.models import User as UserModel
-from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 
-class User(UserModel):
-    created_at = models.DateTimeField(auto_now_add=True)
+class Users(AbstractUser):
 
-    def get_fullname(self):
-        return f"{self.first_name} {self.last_name}"
+    USERNAME_FIELD = 'username'
 
     def __str__(self):
-        return self.get_fullname()
+        return f'{self.first_name} {self.last_name}'

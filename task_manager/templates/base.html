@@ -1,28 +1,28 @@
 {% load i18n %}
-{% get_current_language as LANGUAGE_CODE %}
-{% load bootstrap4 %}
-
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% trans 'Task manager' %}</title>
-        {% bootstrap_css %}
-    </head>
-    <body class="d-flex flex-column min-vh-100 bg-dark text-light" data-bs-theme="dark">
-        <header>
-            {% include 'navbar.html' %}
-        </header>
-        <main class="container wrapper flex-grow-1">
-            {% bootstrap_messages %}
-            {% block body %}
-            {% endblock %}
-        </main>
-        <footer>
-            {% include 'footer.html' %}
-        </footer>
-        {% bootstrap_javascript jquery='full' %}
-    </body>
+  <head>
+    <meta charset="utf-8">
+    <title>{{title}}</title>
+    {% load static %}
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="{% static 'headers.css' %}" rel="stylesheet">
+    {% load bootstrap4 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript jquery='full' %}
+  </head>
+
+  <body class="d-flex flex-column min-vh-100">
+    {% include "navigation.html" %}
+    <div class="container">
+      {% if messages %}
+        {% bootstrap_messages %}
+      {% endif %}
+
+      {% block content %}
+      {% endblock %}
+    </div>
+    <p> </p>
+  </body>
 </html>

@@ -1,56 +1,53 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib import messages
-from django.utils.translation import gettext as _
-from django.shortcuts import redirect
+from .models import Statuses
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import ProtectedError
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.utils.translation import gettext_lazy as _
+# Create your views here.
 
-from task_manager.utils import AuthorizationCheckMixin
-from task_manager.tasks.models import Task
 
-from .models import Status
-from .forms import StatusForm
+# Класс который содержит все общие атрибуты классов CRUD
+class StatusMixin(LoginRequiredMixin, SuccessMessageMixin):
+    model = Statuses
+    extra_context = {'title': _('Statuses'), 'button': _('Create')}
+    login_url = reverse_lazy('login')
+    success_url = reverse_lazy('home_statuses')
+    fields = ['name']
 
 
-class StatusesView(AuthorizationCheckMixin, ListView):
-    model = Status
+class ListStatuses(StatusMixin, ListView):
     context_object_name = 'statuses'
-    template_name = 'statuses/statuses.html'
 
 
-class StatusCreateView(AuthorizationCheckMixin,
-                       SuccessMessageMixin, CreateView):
-    form_class = StatusForm
-    template_name = 'statuses/create.html'
-    success_url = reverse_lazy('statuses')
-    success_message = _('Status successfully created')
+class CreateStatus(StatusMixin, CreateView):
+    success_message = _("Status created successfully")
+    template_name = 'apps/apps_form.html'
 
 
-class StatusUpdateView(AuthorizationCheckMixin,
-                       SuccessMessageMixin, UpdateView):
-    model = Status
-    form_class = StatusForm
-    template_name = 'statuses/update.html'
-    success_url = reverse_lazy('statuses')
-    success_message = _('Status successfully updated')
+class UpdateStatus(StatusMixin, UpdateView):
+    success_message = _('Status successfully changed')
+    template_name = 'apps/apps_form.html'
+    extra_context = {'title': _('Statuses'), 'button': _('Change')}
 
 
-class StatusDeleteView(AuthorizationCheckMixin,
-                       SuccessMessageMixin, DeleteView):
-    model = Status
-    template_name = 'statuses/delete.html'
-    success_url = reverse_lazy('statuses')
-    success_message = _('Status successfully deleted')
+class DeleteStatus(StatusMixin, DeleteView):
+    template_name = 'apps/apps_confirm_delete.html'
 
     def post(self, request, *args, **kwargs):
-        status_id = kwargs['pk']
-        tasks_with_status = Task.objects.filter(status=status_id)
-
-        if tasks_with_status:
+        try:
+            self.delete(request, *args, **kwargs)
+            messages.success(
+                self.request,
+                _('Status successfully deleted')
+            )
+            return redirect(reverse_lazy('home_statuses'))
+        except ProtectedError:
             messages.error(
                 self.request,
-                _('It is not possible to delete a status '
-                  'because it is in use')
+                _("Error! Can't delete, status in use")
             )
-            return redirect('statuses')
-        return super().post(request, *args, **kwargs)
+            return redirect(reverse_lazy('home_statuses'))

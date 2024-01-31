@@ -1,45 +1,29 @@
-from django_filters import FilterSet, ModelChoiceFilter, BooleanFilter
-from django.utils.translation import gettext as _
-from django.forms import CheckboxInput, Select
-
-from task_manager.statuses.models import Status
-from task_manager.labels.models import Label
-from task_manager.users.models import User
-
-from .models import Task
+import django_filters
+from task_manager.labels.models import Labels
+from task_manager.tasks.models import Tasks
+from django import forms
+from django.utils.translation import gettext_lazy as _
 
 
-WIDGET = Select(attrs={'class': 'form-control bg-dark text-white'})
+class TaskFilter(django_filters.FilterSet):
+    def show_own_task(self, queryset, arg, value):
+        if value:
+            return queryset.filter(author=self.request.user)
+        return queryset
 
-
-class TaskFilter(FilterSet):
-    status = ModelChoiceFilter(
-        label=_('Status'),
-        queryset=Status.objects.all(),
-        widget=WIDGET,
+    own_tasks = django_filters.BooleanFilter(
+        method='show_own_task',
+        widget=forms.CheckboxInput,
+        label=_('Show own tasks'),
     )
-    executor = ModelChoiceFilter(
-        label=_('Executor'),
-        queryset=User.objects.all(),
-        widget=WIDGET,
-    )
-    labels = ModelChoiceFilter(
-        label=_('Label'),
-        queryset=Label.objects.all(),
-        widget=WIDGET,
-    )
-    only_mine_tasks = BooleanFilter(
-        label=_('Only my tasks'),
-        method='get_my_tasks',
-        widget=CheckboxInput,
+    labels = django_filters.ModelChoiceFilter(
+        queryset=Labels.objects.all(),
+        label=_('Label filter'),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+        })
     )
 
     class Meta:
-        model = Task
+        model = Tasks
         fields = ['status', 'executor', 'labels']
-
-    def get_my_tasks(self, queryset, _, value):
-        if value:
-            user = self.request.user
-            return queryset.filter(author=user)
-        return queryset
