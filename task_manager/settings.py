@@ -1,6 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
-# import dj_database_url
+import dj_database_url
 import os
 
 
@@ -8,13 +8,14 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+DEBUG = os.getenv('DEBUG')
+DEBUG = True if DEBUG and DEBUG != '0' else False
+
 SECRET_KEY = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv("DATABASE_URL")
+RAILWAY_ON = os.getenv('RAILWAY', False)
 
 ROLLBAR_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-
-DEBUG = os.getenv('DEBUG')
-DEBUG = True if DEBUG else False
 
 
 ALLOWED_HOSTS = [
@@ -22,8 +23,6 @@ ALLOWED_HOSTS = [
     '.railway.app',
     '127.0.0.1',
     '0.0.0.0',
-    'task-manager-j4db.onrender.com',
-    
 ]
 
 INSTALLED_APPS = [
@@ -75,49 +74,45 @@ TEMPLATES = [
 WSGI_APPLICATION = 'task_manager.wsgi.application'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.render.com/'
+    'https://*.railway.app'
 ]
 
-# if DEBUG:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'db.sqlite3',
-#         }
-#     }
-# else:
-#     DATABASES = {
-#         "default": dj_database_url.config(
-#             default=DATABASE_URL,
-#             conn_max_age=1800
-#         ),
-#     }
-
-DATABASES = {
-    'default': {
+if RAILWAY_ON:
+    DATABASE = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=1800
+    )
+else:
+    DATABASE = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+
+DATABASES = {'default': DATABASE}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'MinimumLengthValidator',
         'OPTIONS': {
             'min_length': 3,
         }
     },
 ]
 
-# LANGUAGE_CODE = 'en-us'
-LANGUAGE_CODE = 'ru-ru'
+if RAILWAY_ON:
+    LANGUAGE_CODE = 'en-us'
+else:
+    LANGUAGE_CODE = 'ru-ru'
 
 LANGUAGES = (
     ('en-us', 'English'),
-    ('ru', 'Russian'),
+    ('ru-ru', 'Russian'),
 )
 
 LOCALE_PATHS = (
