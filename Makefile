@@ -1,27 +1,41 @@
-PORT ?= 8000
-start:
-	python3 manage.py runserver
-
-lint:
-	poetry run flake8
-	
 MANAGE := poetry run python manage.py
 
-install:
-	@poetry install
+.PHONY: dev
+dev:
+	@$(MANAGE) runserver
 
-migrate:
-	 @$(MANAGE) migrate
+.PHONY: translate
+translate:
+	@$(MANAGE) makemessages -l ru_RU
 
+.PHONY: compile
+compile:
+	@$(MANAGE) compilemessages
+
+.PHONY: migrations
 migrations:
 	@$(MANAGE) makemigrations
 
-build: install migrate
+.PHONY: migrate
+migrate:
+	@$(MANAGE) migrate
 
+.PHONY: shell
+shell:
+	@$(MANAGE) shell_plus --ipython
+
+.PHONY: lint
+lint:
+	@poetry run flake8 task_manager
+.PHONY: test
 test:
-	 poetry run python manage.py test
+	@poetry run coverage run --source='.' manage.py test task_manager
+	@poetry run coverage xml
 
-test-coverage:
-	poetry run coverage run --source='.' manage.py test
-	poetry run coverage report
-	poetry run coverage xml
+
+.PHONY: start
+start:
+	@poetry install
+	@$(MANAGE) makemigrations
+	@$(MANAGE) migrate
+	@$(MANAGE) runserver
