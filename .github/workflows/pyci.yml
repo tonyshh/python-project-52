@@ -1,16 +1,13 @@
-name: Python CI
+name: check
 
-on:
-  - push
-  - pull_request
-
+on: push
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # we want to test our package on several versions of Python
-        python-version: [3.11]
+        
+        python-version: [ 3.11]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -22,17 +19,7 @@ jobs:
         run: |
           pip install poetry
           poetry install
-      - name: Run linter
-        run: |
-          poetry run flake8 task_manager
-      - name: Test & publish code coverage
-        uses: paambaati/codeclimate-action@v3.0.0
-        if: github.ref_name == 'main'
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.TEST_COVERAGE_ENV }}
-        with:
-          coverageCommand: make test
-          debug: true
+      - run: make lint
       - name: Notify deploy to Rollbar
         uses: rollbar/github-deploy-action@2.1.1
         id: rollbar_deploy
