@@ -6,3 +6,4 @@ errors.log
 .coverage
 coverage.xml
 .coveragerc
+dist
