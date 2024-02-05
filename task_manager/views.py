@@ -36,4 +36,3 @@ class UserLogoutView(LogoutView):
         response = super().dispatch(request, *args, **kwargs)
         messages.info(request, _('You have been logged out'))
         return response
-
