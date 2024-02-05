@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "hexlet-code"
 version = "0.1.0"
-description = "A simple task manager that allows users to create and manage tasks between their team"
-authors = []
+description = ""
+authors = ["tonyshh <shalin.anton8@gmail.com>"]
 readme = "README.md"
+
 packages = [{include = "task_manager"}]
 
 [tool.poetry.dependencies]
