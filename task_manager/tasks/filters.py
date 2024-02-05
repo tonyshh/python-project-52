@@ -1,29 +1,42 @@
-import django_filters
-from task_manager.labels.models import Labels
-from task_manager.tasks.models import Tasks
+from django_filters import BooleanFilter, ModelChoiceFilter, FilterSet
+from .models import Task
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from task_manager.statuses.models import Status
+from task_manager.users.models import User
+from task_manager.labels.models import Label
 
 
-class TaskFilter(django_filters.FilterSet):
-    def show_own_task(self, queryset, arg, value):
-        if value:
-            return queryset.filter(author=self.request.user)
-        return queryset
-
-    own_tasks = django_filters.BooleanFilter(
-        method='show_own_task',
+class TaskFilter(FilterSet):
+    show_my_tasks = BooleanFilter(
+        label=_('Show only my tasks'),
+        method='filter_show_my_tasks',
         widget=forms.CheckboxInput,
-        label=_('Show own tasks'),
+        label_suffix=""
     )
-    labels = django_filters.ModelChoiceFilter(
-        queryset=Labels.objects.all(),
-        label=_('Label filter'),
-        widget=forms.Select(attrs={
-            'class': 'form-select',
-        })
+
+    status = ModelChoiceFilter(
+        label=_('Status'),
+        queryset=Status.objects.all(),
+        label_suffix=""
+    )
+    executor = ModelChoiceFilter(
+        label=_('Executor'),
+        queryset=User.objects.all(),
+        label_suffix=""
+    )
+    labels = ModelChoiceFilter(
+        label=_('Label'),
+        queryset=Label.objects.all(),
+        label_suffix=""
     )
 
     class Meta:
-        model = Tasks
+        model = Task
         fields = ['status', 'executor', 'labels']
+
+    def filter_show_my_tasks(self, queryset, name, value):
+        if value:
+            user = self.request.user
+            return queryset.filter(author=user)
+        return queryset

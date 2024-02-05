@@ -1,91 +1,115 @@
-import os
-import json
-from django.contrib.auth import get_user_model
-from django.contrib.messages import get_messages
-from django.test import TestCase
+from django.test import TestCase, Client
+from .models import Task
+from django.core.management import call_command
+from task_manager.users.models import User
+from task_manager.statuses.models import Status
+from task_manager.labels.models import Label
+from test_mixins.mixin_for_crud_tests import ObjectCRUDCase
+from test_mixins.mixin_for_form_test import ObjectFormTest
 from django.urls import reverse_lazy
-from task_manager.tasks.models import Task
+from .forms import TaskCreateForm
+from django.contrib.messages import get_messages
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import activate
+# Create your tests here.
 
 
-class SetupTestTask(TestCase):
-    fixtures = ['users.json', 'tasks.json', 'labels.json', 'statuses.json']
+class TaskTestCase(TestCase, ObjectCRUDCase):
+
+    fixtures = [
+        'fixtures/taskdata.json',
+        'fixtures/labeldata.json',
+        'fixtures/userdata.json',
+        'fixtures/statusdata.json'
+    ]
+    pk = 2
+    model = Task
+    index_page = 'task_index'
+    objects_plural = 'tasks'
+    template_name = 'tasks/index.html'
 
     def setUp(self):
-        self.tasks = reverse_lazy('tasks')
-        self.create = reverse_lazy('create_task')
-        self.task = reverse_lazy('task', kwargs={"pk": 1})
-        self.upd_task = reverse_lazy("update_task", kwargs={"pk": 1})
-        self.del_task1 = reverse_lazy("delete_task", kwargs={"pk": 1})
-        self.del_task2 = reverse_lazy("delete_task", kwargs={"pk": 2})
-        self.user = get_user_model().objects.get(pk=1)
-        self.task1 = Task.objects.get(pk=1)
-        self.task2 = Task.objects.get(pk=2)
-        with open(os.path.join("fixtures", "test_task.json")) as f:
-            self.test_task = json.load(f)
+        # Load fixtures
+        activate('en')
+        call_command('loaddata', *self.fixtures)
+        self.client = Client()
 
+    def test_query_params(self):
+        """
+        Testing filter for tasks
+        """
+        test_user = User.objects.get(username='Mary')
+        self.client.force_login(test_user)
+        response = self.client.get(
+            '/tasks/',
+            {
+                'status': 1,
+                'executor': 1,
+                'labels': 2,
+                'show_my_tasks': True
+            }
+        )
+        tasks = response.context['tasks']
+        self.assertEqual(len(tasks), 1)
 
-class TestTask(SetupTestTask):
-    fixtures = ['users.json', 'tasks.json', 'labels.json', 'statuses.json']
+    def test_create_object(self):
+        task = self.model.objects.create(
+            name='first_task',
+            description='test desc',
+            author=User.objects.get(first_name='Mary'),
+            status=Status.objects.create(pk=99)
+        )
+        task.labels.add(Label.objects.get(pk=2), Label.objects.get(pk=3))
+        task.save()
+        self.assertTrue(
+            self.model.objects.filter(
+                name='first_task', description='test desc',
+                author='2', labels=(2, 3), status=99).exists()
+        )
 
-    def test_tasks_page(self):
-        self.client.force_login(user=self.user)
-        response = self.client.get(self.tasks)
+    def test_view_task(self):
+        test_user = User.objects.get(username='Mary')
+        self.client.force_login(test_user)
+        task = self.model.objects.get(pk=2)
+        task_labels = task.labels
+        response = self.client.get(reverse_lazy('task_single', kwargs={'pk': task.pk}))
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasks/task_single.html')
+        response_object = response.context['task']
+        self.assertEqual(response_object.name, task.name)
+        self.assertEqual(response_object.labels, task_labels)
 
-    def test_task_page(self):
-        self.client.force_login(user=self.user)
-        response = self.client.get(self.task)
+    def test_delete_task_failed(self):
+        """
+        Validates whether the author of a task attempts to delete it
+        """
+        test_user = User.objects.get(username='vlad')
+        self.client.force_login(test_user)
+        task = self.model.objects.get(pk=2)
+        response = self.client.get(
+            reverse_lazy('task_delete', kwargs={'pk': task.pk}),
+            follow=True
+        )
+        self.assertTemplateUsed(response, self.template_name)
         self.assertEqual(response.status_code, 200)
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), _("Only the author of the task can delete it"))
 
-    def test_create_page(self):
-        self.client.force_login(user=self.user)
-        response = self.client.get(self.create)
-        self.assertEqual(response.status_code, 200)
 
-    def test_create_task(self):
-        task_count = Task.objects.count()
-        self.client.force_login(self.user)
-        response = self.client.post(path=self.create, data=self.test_task)
-        self.assertEqual(response.status_code, 302)
-        self.task3 = Task.objects.get(pk=3)
-        self.assertEqual(self.task3.name, self.test_task.get('name'))
-        self.assertEqual(Task.objects.count(), task_count + 1)
+class CreateTaskFormCase(TestCase, ObjectFormTest):
+    fixtures = ['fixtures/statusdata.json']
+    form = TaskCreateForm
+    correct_data = {
+        'name': 'test task',
+        'description': 'test description',
+        'status': Status.objects.first(),
+    }
+    wrong_data = {
+        'name': 'wrong task',
+        'status': 'invalid status'
+    }
 
-    def test_upd_page(self):
-        self.client.force_login(self.user)
-        response = self.client.get(self.upd_task)
-        self.assertEqual(response.status_code, 200)
-
-    def test_upd_task(self):
-        self.client.force_login(self.user)
-        self.assertNotEqual(self.task1.name, self.test_task.get("name"))
-        response = self.client.post(path=self.upd_task, data=self.test_task)
-        self.assertEqual(response.status_code, 302)
-        self.task = Task.objects.get(pk=1)
-        self.assertEqual(self.task.name, self.test_task.get('name'))
-
-    def test_delete_page(self):
-        self.client.force_login(user=self.user)
-        response = self.client.get(self.del_task1)
-        self.assertEqual(response.status_code, 200)
-
-    def test_delete_task(self):
-        task_count = Task.objects.count()
-        self.client.force_login(self.user)
-        response = self.client.delete(path=self.del_task1)
-        self.assertEqual(first=response.status_code, second=302)
-        task_count_after_delete = Task.objects.count()
-        self.assertGreater(task_count, task_count_after_delete)
-        with self.assertRaises(expected_exception=Task.DoesNotExist):
-            Task.objects.get(pk=1)
-
-    def test_delete_task_with_another_author(self):
-        task_count = Task.objects.count()
-        self.client.force_login(self.user)
-        response = self.client.delete(path=self.del_task2)
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response=response, expected_url=self.tasks)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(_('A task can only be deleted by its author.'), messages)
-        self.assertEqual(Task.objects.all().count(), task_count)
+    def setUp(self):
+        # Load fixtures
+        call_command('loaddata', *self.fixtures)

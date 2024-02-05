@@ -1,15 +1,9 @@
-from task_manager.labels.models import Label
-from django import forms
+from .models import Label
+from django.forms import ModelForm
 
 
-class LabelForm(forms.ModelForm):
+class LabelCreateForm(ModelForm):
+
     class Meta:
         model = Label
         fields = ['name']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите имя статуса',
-                'maxlength': '100'
-            })
-        }

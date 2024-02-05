@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}<h1 class="my-4 text-center">{% trans "Statuses" %}</h1>{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-center mt-3 mb-0">
+    <a class="btn btn-success btn-md" href="{% url 'status_create' %}">{% trans "Create status" %}</a>
+  </div>
+  <table class="table table-lg-responsive table-hover mt-4">
+    <thead class="thead-light">
+        <tr>
+            <th>{% trans "ID" %}</th>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Creation date" %}</th>
+            <th></th>
+        </tr>
+    </thead>
+    
+        {% if statuses %}
+        <tbody>
+            {% for status in statuses %}
+            <tr>
+                <td>{{ status.id }}</td>
+                <td>{{ status.name }}</td>
+                <td>{{ status.created_at }}</td>
+                <td>
+                    <a href="{% url 'status_update' status.id %}">{% trans "Modify" %}</a>
+                    <br>
+                    <a href="{% url 'status_delete' status.id %}">{% trans "Delete" %}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        </tbody>
+        
+  </table>
+</div>
+{% endblock %}

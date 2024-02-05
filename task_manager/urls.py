@@ -21,12 +21,11 @@ from task_manager import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index),
-    path('logout/', views.LogoutUser.as_view(), name='logout'),
-    path('login/', views.LoginUser.as_view(), name='login'),
+    path('', views.HomePageView.as_view(), name='main'),
     path('users/', include('task_manager.users.urls'), name='users'),
+    path('login/', views.UserLoginView.as_view(), name='login'),
+    path('logout/', views.UserLogoutView.as_view(), name='logout'),
     path('statuses/', include('task_manager.statuses.urls'), name='statuses'),
-    path('tasks/', include('task_manager.tasks.urls'), name='tasks'),
     path('labels/', include('task_manager.labels.urls'), name='labels'),
-    path('tgbot/', include('task_manager.tg_bot.urls'), name='tgbot')
+    path('tasks/', include('task_manager.tasks.urls'), name='tasks'),
 ]

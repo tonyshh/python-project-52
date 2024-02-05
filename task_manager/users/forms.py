@@ -1,63 +1,56 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm
-from django.forms import TextInput, PasswordInput
-from django.core.exceptions import ValidationError
 
 
-User = get_user_model()
+class NewUserForm(UserCreationForm):
+    """
+    Class to handle a form to register a user with
+    certain fields that are required
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-
-class CustomUserCreationForm(UserCreationForm):
-
-    class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'username', 'password1', 'password2']
-        widgets = {
-            'first_name': TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите имя',
-                'maxlength': '150'
-            }),
-            'last_name': TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите фамилию',
-                'maxlength': '150'
-            }),
-            'username': TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите имя пользователя',
-                'maxlength': '150'
-            }),
-            'password1': PasswordInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Пароль',
-                'maxlength': '150'
-            }),
-            'password2': PasswordInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Подтверждение пароля',
-                'maxlength': '150'
-            }),
+        placeholders = {
+            'first_name': _('First Name'),
+            'last_name': _('Last Name'),
+            'username': _('Username'),
+            'password1': _('Password'),
+            'password2': _('Confirm Password'),
         }
 
+        for field_name, field in self.fields.items():
+            field.widget.attrs['placeholder'] = placeholders.get(field_name, '')
+
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+
+    class Meta:
+        model = get_user_model()
+        fields = ("first_name", "last_name", "username",
+                  "password1", "password2")
+
+    def save(self, commit=True):
+        """
+        Saves the form in db if valid
+        :return: new user information
+        """
+        user = super(NewUserForm, self).save(commit=False)
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
+        user.username = self.cleaned_data.get('username')
+        user.set_password(self.cleaned_data.get('password1'))
+        if commit:
+            user.save()
+        return user
+
+
+class UserUpdateForm(NewUserForm):
+    """
+    Form to update user information
+    """
     def clean_username(self):
-        username = self.cleaned_data.get("username")
-        current_user_id = self.instance.id
-
-        if username:
-            user_exists = self._meta.model.objects.filter(
-                username__iexact=username
-            ).exclude(id=current_user_id).exists()
-
-            if user_exists:
-                self._update_errors(
-                    ValidationError(
-                        {
-                            "username": self.instance.unique_error_message(
-                                self._meta.model, ["username"]
-                            )
-                        }
-                    )
-                )
-            else:
-                return username
+        """
+        Override the clean_username method to remove uniqueness validation
+        """
+        return self.cleaned_data.get('username')

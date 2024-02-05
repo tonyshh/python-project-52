@@ -1,8 +1,25 @@
-{% extends 'base.html' %}
-{% load bootstrap4 %}
+{% extends "base.html" %}
 {% load i18n %}
-{% get_current_language as LANGUAGE_CODE %}
+
+
 
 {% block content %}
-<h1> Hello mr. {{ user }}</h1>
+
+
+<h1 class="my-5"></h1>
+<div class="container-fluid text-center max-width mt-5 px-5 pt-3" >
+  <div class="card-body p-5 bg-light">
+    <div class="display-4">{% trans "Hello from Hexlet!" %}</div>
+    <p class="lead">{% trans "Practical courses of programming" %}</p>
+    <hr>
+    <a class="btn btn-success btn-lg" href="https://ru.hexlet.io">{% trans "Learn more" %}</a>
+  </div>
+</div>
+
+<style>
+  .max-width {
+    max-width: 700px;
+  }
+</style>
+    
 {% endblock %}
