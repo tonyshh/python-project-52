@@ -1,0 +1,8 @@
+__pycache__
+*.pyc
+.idea
+.env
+errors.log
+.coverage
+coverage.xml
+.coveragerc
