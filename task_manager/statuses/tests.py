@@ -6,8 +6,8 @@ from django.core.management import call_command
 from django.urls import reverse_lazy
 from django.contrib.messages import get_messages
 from django.utils.translation import activate
-from test_mixins.mixin_for_crud_tests import ObjectCRUDCase
-from test_mixins.mixin_for_form_test import ObjectFormTest
+from task_manager.test_mixins.mixin_for_crud_tests import ObjectCRUDCase
+from task_manager.test_mixins.mixin_for_form_test import ObjectFormTest
 from .forms import StatusCreateForm
 # Create your tests here.
 
